@@ -1,41 +1,48 @@
-import { useCallback, useEffect } from 'react';
-import { useDifficultyLevelState, useSelectTimeState, useTakeInputState, useTargetParagraphState } from '../../hooks/BasicUseState';
+import {  useEffect } from 'react';
+import {  useTakeInputState, useTargetParagraphState } from '../../hooks/BasicUseState';
 import Paragraphs from '../../utils/generateParagraph';
+import { useDispatch, useSelector } from 'react-redux';
+import { setTargetParagraph } from '../../redux/slices/Filter';
+import { setInput } from '../../redux/slices/Filter';  // Import the action
+
 
 const MainTyping = () => {
-    const { input, setInput } = useTakeInputState();
-    const { targetParagraph, setTargetParagraph } = useTargetParagraphState();
-    const {Level } = useDifficultyLevelState()
-    // const {including , toggleIncluding} = useIncludingState()
-    const { selectTime } = useSelectTimeState()
+    const dispatch = useDispatch();
+    const Level = useSelector((state) => state.filter.level); 
+    const selectTime = useSelector((state) => state.filter.selectTime); 
+    const including = useSelector((state) => state.filter.including); // Add including
+    const targetParagraph = useSelector((state) => state.filter.targetParagraph); // Add including
+    const input = useSelector((state) => state.filter.input);  // Access input from Redux state
+    const accuracy = useSelector((state) => state.filter.accuracy);  // Access input from Redux state
+    const typingSpeed = useSelector((state) => state.filter.typingSpeed);  // Access input from Redux state
+    
 
 
-
-    const applyFilters = (difficulty = "hard", time = "30s") => {
-        console.log("Applying filters with difficulty:", difficulty, "and time:", time);
+    const applyFilters = (difficulty = "hard", time = "30s", including = []) => {        
         const data = Paragraphs.find(p =>
             p.difficulty === difficulty &&
-            p.number === true &&
-            p.symbols === true &&
-            p.time === time
+            p.time === time &&
+            (including.includes("number") ? p.number === true : true) &&
+            (including.includes("symbols") ? p.symbols === true : true) &&
+            (including.includes("text") ? p.text === true : true)  // Assuming 'text' is a filter condition
         );
+        
         if (data) {
-            setTargetParagraph(data.text);
+            dispatch(setTargetParagraph(data.text));
         } else {
             console.log("No matching paragraph found");
         }
     };
-    
-    useEffect(() => {
-        console.log("useEffect triggered with Level:", Level, "and selectTime:", selectTime);
-        applyFilters(Level);
-    }, [Level]);
-    
+
+    const handleChange = (e) => {
+        dispatch(setInput(e.target.value));  // Dispatch action to update input in Redux state
+    };
 
 
-    // useEffect(() => {
-    //     applyFilters(Level, selectTime);
-    // }, [Level, selectTime , applyFilters])
+
+    useEffect(()=>{
+        applyFilters(Level , selectTime, including)
+    },[Level , selectTime , including])
 
 
     return (
@@ -48,7 +55,7 @@ const MainTyping = () => {
                     <div className="textBox py-10 px-2">
                         <input
                             value={input}
-                            onChange={(e) => setInput(e.target.value)}
+                            onChange={handleChange}
                             className='w-[90%] h-[100px] text-4xl p-4 font-[Open_Sans] tracking-wide'
                             placeholder='Start typing there ...'
                             name="inputText"
@@ -57,8 +64,13 @@ const MainTyping = () => {
                     </div>
                     {input}
                 </div>
-                <div className="right">
-                    ok I am also there
+                <div className="right mt-[25%] text-2xl">
+                        <div>
+                            Speed : {typingSpeed}wpm
+                        </div><br />
+                        <div>
+                            Accuracy : {accuracy}%
+                        </div>
                 </div>
             </div>
         </div>
