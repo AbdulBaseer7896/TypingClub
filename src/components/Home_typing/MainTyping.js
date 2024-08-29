@@ -1,22 +1,21 @@
-import {  useEffect } from 'react';
-import {  useTakeInputState, useTargetParagraphState } from '../../hooks/BasicUseState';
+import { useEffect, useState } from 'react';
 import Paragraphs from '../../utils/generateParagraph';
 import { useDispatch, useSelector } from 'react-redux';
-import { setTargetParagraph } from '../../redux/slices/Filter';
-import { setInput } from '../../redux/slices/Filter';  // Import the action
-
+import { setTargetParagraph, startTyping, resetTyping, setInput , setIsFrozen} from '../../redux/slices/Filter';
+import { useNavigate } from 'react-router-dom';
 
 const MainTyping = () => {
     const dispatch = useDispatch();
+    const [isRunning, setIsRunning] = useState(false);
+    const navigate = useNavigate();
     const Level = useSelector((state) => state.filter.level); 
     const selectTime = useSelector((state) => state.filter.selectTime); 
-    const including = useSelector((state) => state.filter.including); // Add including
-    const targetParagraph = useSelector((state) => state.filter.targetParagraph); // Add including
-    const input = useSelector((state) => state.filter.input);  // Access input from Redux state
-    const accuracy = useSelector((state) => state.filter.accuracy);  // Access input from Redux state
-    const typingSpeed = useSelector((state) => state.filter.typingSpeed);  // Access input from Redux state
-    
-
+    const including = useSelector((state) => state.filter.including);
+    const targetParagraph = useSelector((state) => state.filter.targetParagraph);
+    const input = useSelector((state) => state.filter.input);  
+    const accuracy = useSelector((state) => state.filter.accuracy);
+    const typingSpeed = useSelector((state) => state.filter.typingSpeed);
+    const isTypingFinished = useSelector((state) => state.filter.isTypingFinished);
 
     const applyFilters = (difficulty = "hard", time = "30s", including = []) => {        
         const data = Paragraphs.find(p =>
@@ -24,7 +23,7 @@ const MainTyping = () => {
             p.time === time &&
             (including.includes("number") ? p.number === true : true) &&
             (including.includes("symbols") ? p.symbols === true : true) &&
-            (including.includes("text") ? p.text === true : true)  // Assuming 'text' is a filter condition
+            (including.includes("text") ? p.text === true : true)
         );
         
         if (data) {
@@ -35,42 +34,63 @@ const MainTyping = () => {
     };
 
     const handleChange = (e) => {
-        dispatch(setInput(e.target.value));  // Dispatch action to update input in Redux state
+        if (!isRunning && !isTypingFinished) {
+            dispatch(setIsFrozen(true));
+            dispatch(startTyping());
+            setIsRunning(true);
+        }
+        dispatch(setIsFrozen(true));
+        dispatch(setInput(e.target.value));
     };
 
+    const handleStartStop = () => {
 
+        setIsRunning(!isRunning);
+        if (isRunning) {
+            dispatch(setIsFrozen(true));
+            dispatch(resetTyping());  // Stop and reset everything
+        } else {
+            dispatch(startTyping());  // Resume from where it left off
+        }
+    };
 
     useEffect(()=>{
-        applyFilters(Level , selectTime, including)
-    },[Level , selectTime , including])
+        if(isTypingFinished){
+            navigate('/ResultPage');
+        }
+    }, [isTypingFinished === true])
 
+    useEffect(() => {
+        applyFilters(Level, selectTime, including);
+    }, [Level, selectTime, including]);
 
     return (
         <div>
-            <div className="main container mx-auto my-5 h-[80vh] bg-gray-400 text-[#3a575f] flex grid-cols-2">
-                <div className="left w-[80%] p-8">
-                    <div className="givenText w-[90%] h-[50%] border border-black rounded-3xl p-6">
-                        <p className='text-4xl font-[Open_Sans] tracking-wide'>{targetParagraph}</p>
+            <div className="main container mx-auto h-[85vh] bg-gray-400 text-[#3a575f] flex grid-cols-2">
+                <div className="left w-[80%] p-8 ">
+                    <div className="givenText w-[90%] h-[50%] border border-black rounded-3xl p-6 ">
+                        <p className='text-4xl font-[Open_Sans] tracking-wide '>{targetParagraph}</p>
                     </div>
-                    <div className="textBox py-10 px-2">
+                    <button onClick={handleStartStop} className='border hidden border-black rounded-lg w-[8%] py-2 text-center text-lg font-bold mt-10 mx-5 bg-white text-black'>
+                        {isRunning ? "Stop" : "Play"}
+                    </button>
+
+                    <div className="textBox py-10 px-2 w-2/3 fixed">
                         <input
                             value={input}
                             onChange={handleChange}
-                            className='w-[90%] h-[100px] text-4xl p-4 font-[Open_Sans] tracking-wide'
-                            placeholder='Start typing there ...'
+                            autoComplete="off"
+                            className='w-[90%] h-[100px] text-4xl p-4 pr-12 font-[Open_Sans] tracking-wide'
+                            placeholder='Start typing here ...'
                             name="inputText"
                             type="text"
+                            // disabled={isTypingFinished}
                         />
                     </div>
-                    {input}
                 </div>
                 <div className="right mt-[25%] text-2xl">
-                        <div>
-                            Speed : {typingSpeed}wpm
-                        </div><br />
-                        <div>
-                            Accuracy : {accuracy}%
-                        </div>
+                    <div>Speed: {Math.round(typingSpeed)} wpm</div><br />
+                    <div>Accuracy: {Math.round(accuracy)}%</div>
                 </div>
             </div>
         </div>
