@@ -12,9 +12,10 @@ const initialState = {
     startTime: null,
     elapsedTime: 0,
     isTypingFinished: false,
+    count: 0
 };
 
-let count = 0;
+// let count = 0;
 let correctWordCount = 0;
 
 const FilterReducer = createSlice({
@@ -77,7 +78,7 @@ const FilterReducer = createSlice({
                 }
 
                 if (newChar === ' ' && prevChar !== ' ') {
-                    count += 1; // Increment count if a space is added
+                    state.count += 1; // Increment count if a space is added
                 }
             }
 
@@ -101,7 +102,7 @@ const FilterReducer = createSlice({
             state.input = newInput;
 
             if (inputWords.length > 0 && newInput[newInput.length - 1] === " ") {
-                if (words[count - 1] === inputWords[count - 1]) {
+                if (words[state.count - 1] === inputWords[state.count - 1]) {
                     correctWordCount += 1;
                 }
             }
@@ -110,8 +111,8 @@ const FilterReducer = createSlice({
                 state.typingSpeed = (correctWordCount / state.elapsedTime);
             }
 
-            if (count > 0) {
-                state.accuracy = (correctWordCount / count) * 100;
+            if (state.count > 0) {
+                state.accuracy = (correctWordCount / state.count) * 100;
             }
 
             if (inputWords.length >= words.length && newInput.trim() === state.targetParagraph.trim()) {
@@ -119,7 +120,7 @@ const FilterReducer = createSlice({
                 state.input = newInput.trim();
             }
 
-            if (count === words.length) {
+            if (state.count === words.length) {
                 state.isTypingFinished = true;
             }
         },
@@ -132,7 +133,7 @@ const FilterReducer = createSlice({
             state.elapsedTime = 0;
             state.isTypingFinished = false;
             state.isFrozen = false;
-            count = 0;
+            state.count = 0;
             correctWordCount = 0;
         }
     },
@@ -141,3 +142,5 @@ const FilterReducer = createSlice({
 export const { setLevel, setTimeSelector, setIncluding, setTargetParagraph, setInput, startTyping, resetTyping, setIsFrozen } = FilterReducer.actions;
 
 export default FilterReducer.reducer;
+
+
