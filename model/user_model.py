@@ -11,10 +11,10 @@ class user_model():
     def connect_to_db(self):
         try:
             self.myDb = mysql.connector.connect(
-                host="localhost",
-                user="root",
-                password="",
-                database="TypingClub",
+                host="sql12.freesqldatabase.com",
+                user="sql12728689",
+                password=" hxlD6IfBwc",
+                database="sql12728689",
                 connection_timeout=600
             )
             self.myDb.autocommit = True
