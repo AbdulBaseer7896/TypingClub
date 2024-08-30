@@ -4,3 +4,4 @@ pymysql
 gunicorn
 flask_login
 pytz
+flask_cors
