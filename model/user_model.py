@@ -13,7 +13,7 @@ class user_model():
             self.myDb = mysql.connector.connect(
                 host="sql12.freesqldatabase.com",
                 user="sql12728689",
-                password=" hxlD6IfBwc",
+                password="hxlD6IfBwc",
                 database="sql12728689",
                 connection_timeout=600
             )
